@@ -2,6 +2,7 @@ package com.example.todolist.controller;
 
 import com.example.todolist.model.ErrorResponseModel;
 import com.example.todolist.model.exceptions.InvalidRequestException;
+import com.example.todolist.model.exceptions.NoSuchTaskFoundException;
 import com.example.todolist.model.exceptions.NoSuchTodoFoundException;
 import com.example.todolist.model.exceptions.TodoAlreadyExistsException;
 import com.example.todolist.properties.MainProperties;
@@ -26,6 +27,24 @@ public class RestResponseEntityExceptionHandler {
     @ExceptionHandler(NoSuchTodoFoundException.class)
     public ResponseEntity<ErrorResponseModel> handleNoSuchTodoFoundException(
             NoSuchTodoFoundException exception, HttpServletRequest request) {
+        String timeStamp = new SimpleDateFormat().format(new java.util.Date());
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ErrorResponseModel.builder()
+                        .status(HttpStatus.NOT_FOUND.value())
+                        .error(HttpStatus.NOT_FOUND.getReasonPhrase())
+                        .messages(List.of((exception.getMessage())))
+                        .path(request.getRequestURL().toString())
+                        .timestamp(timeStamp)
+                        .build());
+    }
+
+    /**
+     * Custom exception, returns 404 if the todos doesn't exist.
+     */
+    @ExceptionHandler(NoSuchTaskFoundException.class)
+    public ResponseEntity<ErrorResponseModel> handleNoSuchTaskFoundException(
+            NoSuchTaskFoundException exception, HttpServletRequest request) {
         String timeStamp = new SimpleDateFormat().format(new java.util.Date());
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)

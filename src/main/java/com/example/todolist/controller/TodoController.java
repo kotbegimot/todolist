@@ -1,8 +1,10 @@
 package com.example.todolist.controller;
 
 import com.example.todolist.model.Catalogue;
+import com.example.todolist.model.TaskModel;
 import com.example.todolist.model.TodoModel;
 import com.example.todolist.service.TodosService;
+import com.example.todolist.util.TaskMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -112,5 +114,39 @@ public class TodoController {
   public void deleteTodo(
       @PathVariable @Parameter(name = "id", description = "id of the task", example = "1") int id) {
     service.deleteTodo(id);
+  }
+
+  /**
+   * POST request that creates a new task for todos by its id. Creates a new task entity
+   *
+   * @param newTask - new task object
+   * @param id - todos object id
+   * @return - created task
+   */
+  @Operation(summary = "Creates task in todo", description = "Creates task in todo by ID")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "200", description = "Task is successfully created"),
+        @ApiResponse(responseCode = "404", description = "Todo with this id doesn't exist")
+      })
+  @PostMapping("/{id}/tasks")
+  @ResponseStatus(value = HttpStatus.CREATED)
+  public TaskModel createTask(@RequestBody TaskModel newTask, @PathVariable int id) {
+    return service.createTask(newTask, id);
+  }
+
+  @Operation(summary = "Deletes task from todo", description = "Deletes task from todo by ID")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "200", description = "Task is successfully deleted"),
+        @ApiResponse(responseCode = "404", description = "Todo with this id doesn't exist"),
+        @ApiResponse(responseCode = "404", description = "Task with this name doesn't exist")
+      })
+  @DeleteMapping("/{id}/tasks")
+  @ResponseStatus(value = HttpStatus.OK)
+  public void deleteTodo(
+      @PathVariable @Parameter(name = "id", description = "id of the todo", example = "1") int id,
+      @RequestParam(value = "name", required = true) String name) {
+    service.deleteTask(name, id);
   }
 }

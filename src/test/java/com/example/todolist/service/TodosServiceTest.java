@@ -8,13 +8,15 @@ import com.example.todolist.entity.TodoEntity;
 import com.example.todolist.model.TaskModel;
 import com.example.todolist.model.TodoModel;
 import com.example.todolist.model.exceptions.NoSuchTodoFoundException;
+import com.example.todolist.repository.TaskRepositoryJPA;
 import com.example.todolist.repository.TodoRepositoryJPA;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.*;
 
 class TodosServiceTest {
-  private final TodoRepositoryJPA repository = mock(TodoRepositoryJPA.class);
+  private final TodoRepositoryJPA todoRepository = mock(TodoRepositoryJPA.class);
+  private final TaskRepositoryJPA taskRepository = mock(TaskRepositoryJPA.class);
   private final ValidationService validation = mock(ValidationService.class);
   private TodosService service;
   private TodoModel todoModel;
@@ -24,7 +26,7 @@ class TodosServiceTest {
 
   @BeforeEach
   void setUp() {
-    service = new TodosService(repository, validation);
+    service = new TodosService(todoRepository, taskRepository, validation);
     TaskModel taskModel =
         TaskModel.builder().name("some task").description("task description").build();
     todoModel =
@@ -53,41 +55,44 @@ class TodosServiceTest {
 
   @AfterEach
   void tearDown() {
-    reset(repository);
+    reset(todoRepository);
     reset(validation);
   }
 
   @Test
   @DisplayName("Service should return list of todo objects")
   void getAllTodosTest() {
-    when(repository.findAll()).thenReturn(entityList);
+    when(todoRepository.findAll()).thenReturn(entityList);
 
     assertEquals(modelList, service.getTodos());
-    verify(repository, times(1)).findAll();
-    verifyNoMoreInteractions(repository);
+    verify(todoRepository, times(1)).findAll();
+    verifyNoMoreInteractions(todoRepository);
+    verifyNoInteractions(taskRepository);
   }
 
   @Test
   @DisplayName("Service should throw the NoSuchTodoFoundException exception")
   void getInvalidTodoByIdTest() {
     int id = 1;
-    when(repository.findById(id)).thenReturn(Optional.empty());
+    when(todoRepository.findById(id)).thenReturn(Optional.empty());
 
     Assertions.assertThrows(NoSuchTodoFoundException.class, () -> service.getTodo(id));
 
-    verify(repository, times(1)).findById(id);
-    verifyNoMoreInteractions(repository);
+    verify(todoRepository, times(1)).findById(id);
+    verifyNoMoreInteractions(todoRepository);
+    verifyNoInteractions(taskRepository);
   }
 
   @Test
   @DisplayName("Service should return todo object")
   void getTodoByIdTest() {
     int id = 1;
-    when(repository.findById(id)).thenReturn(Optional.of(todoEntity));
+    when(todoRepository.findById(id)).thenReturn(Optional.of(todoEntity));
 
     assertEquals(todoModel, service.getTodo(id));
-    verify(repository, times(1)).findById(id);
-    verifyNoMoreInteractions(repository);
+    verify(todoRepository, times(1)).findById(id);
+    verifyNoMoreInteractions(todoRepository);
+    verifyNoInteractions(taskRepository);
   }
 
   @Test
@@ -97,11 +102,11 @@ class TodosServiceTest {
     todoEntityOutput.setId(1);
 
     doNothing().when(validation).validateTodo(todoModel);
-    when(repository.save(todoEntity)).thenReturn(todoEntityOutput);
+    when(todoRepository.save(todoEntity)).thenReturn(todoEntityOutput);
 
     TodoModel outputModel = service.createTodo(todoModel);
 
-    verify(repository, times(1)).save(todoEntity);
+    verify(todoRepository, times(1)).save(todoEntity);
     assertEquals(1, outputModel.getId());
     assertEquals(todoModel.getName(), outputModel.getName());
     assertEquals(todoModel.getDescription(), outputModel.getDescription());
@@ -109,7 +114,8 @@ class TodosServiceTest {
     assertEquals(
         todoModel.getTasks().get(0).getDescription(),
         outputModel.getTasks().get(0).getDescription());
-    verifyNoMoreInteractions(repository);
+    verifyNoMoreInteractions(todoRepository);
+    verifyNoInteractions(taskRepository);
   }
 
   @Test
@@ -117,14 +123,15 @@ class TodosServiceTest {
   void updateTodoFailureTest() {
     int id = 1;
     todoModel.setId(id);
-    when(repository.findById(id)).thenReturn(Optional.empty());
+    when(todoRepository.findById(id)).thenReturn(Optional.empty());
 
     Assertions.assertThrows(NoSuchTodoFoundException.class, () -> service.updateTodo(todoModel));
 
-    verify(repository, times(1)).findById(id);
-    verify(repository, times(0)).save(todoEntity);
+    verify(todoRepository, times(1)).findById(id);
+    verify(todoRepository, times(0)).save(todoEntity);
     verify(validation, times(0)).validateTodo(todoModel);
-    verifyNoMoreInteractions(repository);
+    verifyNoMoreInteractions(todoRepository);
+    verifyNoInteractions(taskRepository);
   }
 
   @Test
@@ -133,14 +140,14 @@ class TodosServiceTest {
     int id = 1;
     todoModel.setId(id);
     todoEntity.setId(id);
-    when(repository.findById(id)).thenReturn(Optional.of(todoEntity));
+    when(todoRepository.findById(id)).thenReturn(Optional.of(todoEntity));
     doNothing().when(validation).validateTodo(todoModel);
-    when(repository.save(todoEntity)).thenReturn(todoEntity);
+    when(todoRepository.save(todoEntity)).thenReturn(todoEntity);
 
     TodoModel outputModel = service.updateTodo(todoModel);
 
-    verify(repository, times(1)).findById(id);
-    verify(repository, times(1)).save(todoEntity);
+    verify(todoRepository, times(1)).findById(id);
+    verify(todoRepository, times(1)).save(todoEntity);
     verify(validation, times(1)).validateTodo(todoModel);
     assertEquals(todoModel.getName(), outputModel.getName());
     assertEquals(todoModel.getDescription(), outputModel.getDescription());
@@ -148,32 +155,35 @@ class TodosServiceTest {
     assertEquals(
         todoModel.getTasks().get(0).getDescription(),
         outputModel.getTasks().get(0).getDescription());
-    verifyNoMoreInteractions(repository);
+    verifyNoMoreInteractions(todoRepository);
+    verifyNoInteractions(taskRepository);
   }
 
   @Test
   @DisplayName("Service should throw the NoSuchTodoFoundException exception")
   void deleteTodoFailureTest() {
     int id = 1;
-    when(repository.findById(id)).thenReturn(Optional.empty());
+    when(todoRepository.findById(id)).thenReturn(Optional.empty());
 
     Assertions.assertThrows(NoSuchTodoFoundException.class, () -> service.deleteTodo(id));
 
-    verify(repository, times(1)).findById(id);
-    verify(repository, times(0)).delete(todoEntity);
-    verifyNoMoreInteractions(repository);
+    verify(todoRepository, times(1)).findById(id);
+    verify(todoRepository, times(0)).delete(todoEntity);
+    verifyNoMoreInteractions(todoRepository);
+    verifyNoInteractions(taskRepository);
   }
 
   @Test
   @DisplayName("Service should execute todo deletion")
   void deleteTodoSuccessTest() {
     int id = 1;
-    when(repository.findById(id)).thenReturn(Optional.of(todoEntity));
+    when(todoRepository.findById(id)).thenReturn(Optional.of(todoEntity));
 
     service.deleteTodo(id);
 
-    verify(repository, times(1)).findById(id);
-    verify(repository, times(1)).delete(todoEntity);
-    verifyNoMoreInteractions(repository);
+    verify(todoRepository, times(1)).findById(id);
+    verify(todoRepository, times(1)).delete(todoEntity);
+    verifyNoMoreInteractions(todoRepository);
+    verifyNoInteractions(taskRepository);
   }
 }
