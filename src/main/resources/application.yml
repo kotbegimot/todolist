@@ -1,0 +1,23 @@
+# general
+spring:
+  application:
+    name: todo_list
+  profiles:
+    active: "dev"
+  jpa:
+    defer-datasource-initialization: true
+  sql:
+    init:
+      mode: always
+server:
+  port: 8080
+  error:
+    include-exception: true
+    include-stacktrace: always
+# logging
+# OFF << FATAL << ERROR << WARN << INFO << DEBUG << TRACE << ALL
+logging:
+  level.com.example.demo: "DEBUG"
+main:
+  exceptionDateFormat: "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+  errorInvalidName: "Invalid %s name: string shouldn't be null or empty"

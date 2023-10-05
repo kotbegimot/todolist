@@ -1,0 +1,24 @@
+<table class="table">
+
+    <thead class="table-dark">
+        <tr>
+            <th>Id</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Tasks</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        <tr *ngFor="let tempTodo of todos">
+            <td class="align-middle">{{ tempTodo.id}}</td>
+            <td class="align-middle">{{ tempTodo.name}}</td>
+            <td class="align-middle">{{ tempTodo.description}}</td>
+            <td class="align-middle">
+                <ul>
+                <li *ngFor="let tempTask of tempTodo.tasks">{{tempTask.name}} ({{tempTask.description}})</li>
+                </ul>
+            </td>
+        </tr>
+    </tbody>
+</table>
