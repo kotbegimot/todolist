@@ -9,12 +9,17 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@Validated
 @CrossOrigin(origins = "http://localhost:4200")
 @RequestMapping(value = "/api/v1/todos")
 @RequiredArgsConstructor
@@ -52,7 +57,7 @@ public class TodoController {
       })
   @GetMapping("/{id}")
   public TodoModel getTodo(
-      @PathVariable @Parameter(name = "id", description = "id of the task", example = "1") int id) {
+      @PathVariable @Parameter(name = "id", description = "id of the task", example = "1") @Positive int id) {
     return service.getTodo(id);
   }
 
@@ -72,7 +77,7 @@ public class TodoController {
       })
   @PostMapping()
   @ResponseStatus(value = HttpStatus.CREATED)
-  public TodoModel createTodo(@RequestBody TodoModel newTodo) {
+  public TodoModel createTodo(@RequestBody @Valid TodoModel newTodo) {
     return service.createTodo(newTodo);
   }
 
@@ -92,8 +97,8 @@ public class TodoController {
       })
   @PutMapping("/{id}")
   public TodoModel updateTodo(
-      @PathVariable @Parameter(name = "id", description = "id of the task", example = "1") int id,
-      @RequestBody TodoModel editTodo) {
+      @PathVariable @Parameter(name = "id", description = "id of the task", example = "1") @Positive int id,
+      @RequestBody @Valid TodoModel editTodo) {
     editTodo.setId(id);
     return service.updateTodo(editTodo);
   }
@@ -112,7 +117,7 @@ public class TodoController {
   @DeleteMapping("/{id}")
   @ResponseStatus(value = HttpStatus.OK)
   public void deleteTodo(
-      @PathVariable @Parameter(name = "id", description = "id of the task", example = "1") int id) {
+      @PathVariable @Parameter(name = "id", description = "id of the task", example = "1") @Positive int id) {
     service.deleteTodo(id);
   }
 
@@ -131,7 +136,7 @@ public class TodoController {
       })
   @PostMapping("/{id}/tasks")
   @ResponseStatus(value = HttpStatus.CREATED)
-  public TaskModel createTask(@RequestBody TaskModel newTask, @PathVariable int id) {
+  public TaskModel createTask(@RequestBody @Valid TaskModel newTask, @PathVariable @Positive int id) {
     return service.createTask(newTask, id);
   }
 
@@ -145,8 +150,8 @@ public class TodoController {
   @DeleteMapping("/{id}/tasks")
   @ResponseStatus(value = HttpStatus.OK)
   public void deleteTodo(
-      @PathVariable @Parameter(name = "id", description = "id of the todo", example = "1") int id,
-      @RequestParam(value = "name", required = true) String name) {
+      @PathVariable @Parameter(name = "id", description = "id of the todo", example = "1") @Positive int id,
+      @RequestParam(value = "name", required = true) @NotBlank String name) {
     service.deleteTask(name, id);
   }
 }

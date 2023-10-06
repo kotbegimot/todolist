@@ -14,7 +14,7 @@ public class InvalidRequestException extends RuntimeException {
         errors = cause;
     }
 
-    public List<String> getErrorsMap() {
+    public List<String> getErrorsList() {
         return errors;
     }
 }
