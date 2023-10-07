@@ -3,6 +3,7 @@ package com.example.todolist.entity;
 import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
@@ -22,9 +23,11 @@ public class TodoEntity {
     private int id;
 
     @Column(name = "name")
+    @NotBlank(message = "Name must not be null or empty")
     private String name;
 
     @Column(name = "description")
+    @NotBlank(message = "Description must not be null or empty")
     private String description;
 
     @OneToMany(mappedBy = "todoEntity",

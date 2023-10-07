@@ -1,6 +1,7 @@
 package com.example.todolist.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -20,9 +21,11 @@ public class TaskEntity {
   private int id;
 
   @Column(name = "name")
+  @NotBlank(message = "Name must not be null or empty")
   private String name;
 
   @Column(name = "description")
+  @NotBlank(message = "Description must not be null or empty")
   private String description;
 
   @ManyToOne(optional = false, fetch = FetchType.LAZY)
