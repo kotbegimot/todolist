@@ -10,6 +10,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.example.todolist.model.TaskModel;
 import com.example.todolist.model.TodoModel;
+import com.example.todolist.model.exceptions.NoSuchTaskFoundException;
+import com.example.todolist.model.exceptions.NoSuchTodoFoundException;
 import com.example.todolist.properties.MainProperties;
 import com.example.todolist.service.TodosService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,6 +23,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
@@ -114,6 +117,24 @@ class TodoControllerTest {
   }
 
   @Test
+  @DisplayName("Should return 404")
+  @WithMockUser
+  void getTodoByIdTodoNotFoundTest() throws Exception {
+    int id = 1;
+    when(properties.getExceptionDateFormat()).thenReturn("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+    doThrow(new NoSuchTodoFoundException(id)).when(service).getTodo(id);
+
+    mvc.perform(get("/api/v1/todos" + "/%d".formatted(id)).accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isNotFound())
+            .andExpect(content().contentType("application/json"))
+            .andExpect(jsonPath("$", notNullValue()))
+            .andExpect(jsonPath("$.status", is(HttpStatus.NOT_FOUND.value())))
+            .andExpect(jsonPath("$.error", is(HttpStatus.NOT_FOUND.getReasonPhrase())))
+            .andExpect(jsonPath("$.messages", notNullValue()));
+  }
+
+  @Test
   @DisplayName("Should call todo creation")
   @WithMockUser
   void createTodoTest() throws Exception {
@@ -191,6 +212,27 @@ class TodoControllerTest {
         .andExpect(jsonPath("$").doesNotExist());
     verify(service, times(1)).deleteTodo(id);
     verifyNoMoreInteractions(service);
+  }
+
+  @Test
+  @DisplayName("Should return 404")
+  @WithMockUser
+  void deleteTaskNotFoundTest() throws Exception {
+    int id = 1;
+    String taskName = "Task name";
+    when(properties.getExceptionDateFormat()).thenReturn("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+    doThrow(new NoSuchTaskFoundException(taskName)).when(service).deleteTask(taskName, id);
+
+    mvc.perform(delete("/api/v1/todos" + "/%d/tasks".formatted(id))
+                    .queryParam("name", taskName)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isNotFound())
+            .andExpect(content().contentType("application/json"))
+            .andExpect(jsonPath("$", notNullValue()))
+            .andExpect(jsonPath("$.status", is(HttpStatus.NOT_FOUND.value())))
+            .andExpect(jsonPath("$.error", is(HttpStatus.NOT_FOUND.getReasonPhrase())))
+            .andExpect(jsonPath("$.messages", notNullValue()));
   }
 
   public String toJsonString(final Object obj) throws RuntimeException {
