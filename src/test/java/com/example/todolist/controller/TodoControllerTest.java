@@ -1,13 +1,5 @@
 package com.example.todolist.controller;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-
 import com.example.todolist.model.TaskModel;
 import com.example.todolist.model.TodoModel;
 import com.example.todolist.model.exceptions.NoSuchTaskFoundException;
@@ -15,8 +7,7 @@ import com.example.todolist.model.exceptions.NoSuchTodoFoundException;
 import com.example.todolist.properties.MainProperties;
 import com.example.todolist.service.TodosService;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.util.ArrayList;
-import java.util.List;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -28,6 +19,17 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
 class TodoControllerTest {
@@ -47,17 +49,17 @@ class TodoControllerTest {
 
     todos = new ArrayList<>();
     TaskModel taskModel =
-        TaskModel.builder().name("some task").description("task description").build();
+        TaskModel.builder().name("some task name").description("task description").build();
     todoModel =
         TodoModel.builder()
             .id(1)
-            .name("some todo")
+            .name("some todo name")
             .description("todo description")
             .tasks(List.of(taskModel))
             .build();
     todos.add(todoModel);
     taskModel =
-        TaskModel.builder().name("another task").description("another task description").build();
+        TaskModel.builder().name("another task name").description("another task description").build();
     todos.add(
         TodoModel.builder()
             .id(2)
@@ -85,12 +87,12 @@ class TodoControllerTest {
         .andExpect(status().isOk())
         .andExpect(content().contentType("application/json"))
         .andExpect(jsonPath("$.todos.size()", is(todos.size())))
-        .andExpect(jsonPath("$.todos[0].name", is("some todo")))
-        .andExpect(jsonPath("$.todos[0].description", is("todo description")))
-        .andExpect(jsonPath("$.todos[0].tasks[0].name", is("some task")))
-        .andExpect(jsonPath("$.todos[1].name", is("another todo")))
-        .andExpect(jsonPath("$.todos[1].description", is("another todo description")))
-        .andExpect(jsonPath("$.todos[1].tasks[0].name", is("another task")));
+        .andExpect(jsonPath("$.todos[0].name", is(todos.get(0).getName())))
+        .andExpect(jsonPath("$.todos[0].description", is(todos.get(0).getDescription())))
+        .andExpect(jsonPath("$.todos[0].tasks[0].name", is(todos.get(0).getTasks().get(0).getName())))
+        .andExpect(jsonPath("$.todos[1].name", is(todos.get(1).getName())))
+        .andExpect(jsonPath("$.todos[1].description", is(todos.get(1).getDescription())))
+        .andExpect(jsonPath("$.todos[1].tasks[0].name", is(todos.get(1).getTasks().get(0).getName())));
     verify(service, times(1)).getTodos();
     verifyNoMoreInteractions(service);
   }
@@ -164,6 +166,37 @@ class TodoControllerTest {
             jsonPath("$.tasks[0].description", is(todoModel.getTasks().get(0).getDescription())));
     verify(service, times(1)).createTodo(newTodoModel);
     verifyNoMoreInteractions(service);
+  }
+
+  @Test
+  @DisplayName("Should return 400")
+  @WithMockUser
+  void createTodoInvalidBodyTest() throws Exception {
+    TodoModel newTodo = TodoModel.builder()
+            .id(0)
+            .name(createStringWithLength(9))
+            .description(createStringWithLength(9))
+            .tasks(new ArrayList<>())
+            .build();
+
+    when(properties.getExceptionDateFormat()).thenReturn("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+    mvc.perform(
+                    post("/api/v1/todos")
+                            .content(toJsonString(newTodo))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$", notNullValue()))
+            .andExpect(jsonPath("$.status", is(HttpStatus.BAD_REQUEST.value())))
+            .andExpect(jsonPath("$.error", is(HttpStatus.BAD_REQUEST.getReasonPhrase())))
+            .andExpect(jsonPath("$.messages", hasSize(2)))
+            .andExpect(jsonPath("$.messages[0]", Matchers.endsWith("length must be of 10 - 255 characters")))
+            .andExpect(jsonPath("$.messages[0]", Matchers.startsWith("Field error in object")))
+            .andExpect(jsonPath("$.messages[1]", Matchers.endsWith("length must be of 10 - 255 characters")))
+            .andExpect(jsonPath("$.messages[1]", Matchers.startsWith("Field error in object")))
+            .andExpect(jsonPath("$.path", is("http://localhost/api/v1/todos")))
+            .andExpect(jsonPath("$.timestamp", notNullValue()));
   }
 
   @Test
@@ -241,5 +274,9 @@ class TodoControllerTest {
     } catch (Exception e) {
       throw new RuntimeException(e);
     }
+  }
+
+  public  String createStringWithLength(int length) {
+    return "a".repeat(Math.max(0, length));
   }
 }

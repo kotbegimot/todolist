@@ -79,7 +79,7 @@ public class TodoController {
             })
     @PostMapping()
     @ResponseStatus(value = HttpStatus.CREATED)
-    public TodoModel createTodo(@RequestBody @Valid TodoModel newTodo) {
+    public TodoModel createTodo(@Valid @RequestBody TodoModel newTodo) {
         return service.createTodo(newTodo);
     }
 
@@ -101,7 +101,7 @@ public class TodoController {
     @PutMapping("/{id}")
     public TodoModel updateTodo(
             @PathVariable @Parameter(name = "id", description = "id of the task", example = "1") @Positive int id,
-            @RequestBody @Valid TodoModel editTodo) {
+            @Valid @RequestBody TodoModel editTodo) {
         editTodo.setId(id);
         return service.updateTodo(editTodo);
     }
@@ -141,7 +141,7 @@ public class TodoController {
             })
     @PostMapping("/{id}/tasks")
     @ResponseStatus(value = HttpStatus.CREATED)
-    public TaskModel createTask(@RequestBody @Valid TaskModel newTask, @PathVariable @Positive int id) {
+    public TaskModel createTask(@Valid @RequestBody TaskModel newTask, @PathVariable @Positive int id) {
         return service.createTask(newTask, id);
     }
 

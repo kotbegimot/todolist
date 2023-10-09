@@ -2,7 +2,6 @@ package com.example.todolist.service;
 
 import com.example.todolist.model.TaskModel;
 import com.example.todolist.model.TodoModel;
-import com.example.todolist.model.exceptions.InvalidRequestException;
 import com.example.todolist.properties.MainProperties;
 import org.junit.jupiter.api.*;
 
@@ -30,19 +29,6 @@ class ValidationServiceTest {
   @AfterEach
   public void tearDown() {
     reset(properties);
-  }
-
-  @Test
-  @DisplayName("Name validation has to fail twice: on todo name and on task name")
-  void validateTodoFailedTest() {
-    when(properties.getErrorInvalidName()).thenReturn(invalidNameError);
-
-    Assertions.assertThrows(InvalidRequestException.class, () -> service.validateTodo(todoModel));
-
-    verify(properties, times(2)).getErrorInvalidName();
-    assertEquals(2, service.getErrorMessages().size());
-    assertEquals(invalidNameError.formatted("todo"), service.getErrorMessages().get(0));
-    assertEquals(invalidNameError.formatted("task"), service.getErrorMessages().get(1));
   }
 
   @Test
