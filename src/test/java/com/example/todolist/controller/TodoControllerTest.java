@@ -4,6 +4,7 @@ import com.example.todolist.model.TaskModel;
 import com.example.todolist.model.TodoModel;
 import com.example.todolist.model.exceptions.NoSuchTaskFoundException;
 import com.example.todolist.model.exceptions.NoSuchTodoFoundException;
+import com.example.todolist.model.exceptions.TodoAlreadyExistsException;
 import com.example.todolist.properties.MainProperties;
 import com.example.todolist.service.TodosService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -133,7 +134,11 @@ class TodoControllerTest {
             .andExpect(jsonPath("$", notNullValue()))
             .andExpect(jsonPath("$.status", is(HttpStatus.NOT_FOUND.value())))
             .andExpect(jsonPath("$.error", is(HttpStatus.NOT_FOUND.getReasonPhrase())))
-            .andExpect(jsonPath("$.messages", notNullValue()));
+            .andExpect(jsonPath("$.messages[0]", is("Todo ID is not found: " + id)))
+            .andExpect(jsonPath("$.path", is("http://localhost/api/v1/todos/" + id)))
+            .andExpect(jsonPath("$.timestamp", notNullValue()));
+    verify(service, times(1)).getTodo(id);
+    verifyNoMoreInteractions(service);
   }
 
   @Test
@@ -172,7 +177,7 @@ class TodoControllerTest {
   @DisplayName("Should return 400")
   @WithMockUser
   void createTodoInvalidBodyTest() throws Exception {
-    TodoModel newTodo = TodoModel.builder()
+    TodoModel newTodoModel = TodoModel.builder()
             .id(0)
             .name(createStringWithLength(9))
             .description(createStringWithLength(9))
@@ -182,7 +187,7 @@ class TodoControllerTest {
     when(properties.getExceptionDateFormat()).thenReturn("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
     mvc.perform(
                     post("/api/v1/todos")
-                            .content(toJsonString(newTodo))
+                            .content(toJsonString(newTodoModel))
                             .contentType(MediaType.APPLICATION_JSON)
                             .accept(MediaType.APPLICATION_JSON))
             .andDo(print())
@@ -197,6 +202,39 @@ class TodoControllerTest {
             .andExpect(jsonPath("$.messages[1]", Matchers.startsWith("Field error in object")))
             .andExpect(jsonPath("$.path", is("http://localhost/api/v1/todos")))
             .andExpect(jsonPath("$.timestamp", notNullValue()));
+    verifyNoInteractions(service);
+  }
+
+  @Test
+  @DisplayName("Should return 409")
+  @WithMockUser
+  void createTodoNameAlreadyExistsTest() throws Exception {
+    TodoModel newTodoModel =
+            TodoModel.builder()
+                    .id(0)
+                    .name(todoModel.getName())
+                    .description(todoModel.getDescription())
+                    .tasks(todoModel.getTasks())
+                    .build();
+    doThrow(new TodoAlreadyExistsException(newTodoModel.getName())).when(service).createTodo(newTodoModel);
+    when(properties.getExceptionDateFormat()).thenReturn("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+    mvc.perform(
+                    post("/api/v1/todos")
+                            .content(toJsonString(newTodoModel))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$", notNullValue()))
+            .andExpect(jsonPath("$.status", is(HttpStatus.CONFLICT.value())))
+            .andExpect(jsonPath("$.error", is(HttpStatus.CONFLICT.getReasonPhrase())))
+            .andExpect(jsonPath("$.messages", hasSize(1)))
+            .andExpect(jsonPath("$.messages[0]",
+                    is("Todo with this name already exists: " + newTodoModel.getName())))
+            .andExpect(jsonPath("$.path", is("http://localhost/api/v1/todos")))
+            .andExpect(jsonPath("$.timestamp", notNullValue()));
+    verify(service, times(1)).createTodo(newTodoModel);
+    verifyNoMoreInteractions(service);
   }
 
   @Test
@@ -248,6 +286,49 @@ class TodoControllerTest {
   }
 
   @Test
+  @DisplayName("Should call task creation")
+  @WithMockUser
+  void createTaskTest() throws Exception {
+    int id = 1;
+    TaskModel taskModel = TaskModel.builder()
+            .name("some task name")
+            .description("task description")
+            .build();
+    when(service.createTask(taskModel, id)).thenReturn(taskModel);
+
+    mvc.perform(post("/api/v1/todos" + "/%d/tasks".formatted(id))
+                    .content(toJsonString(taskModel))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isCreated())
+            .andExpect(content().contentType("application/json"))
+            .andExpect(jsonPath("$", notNullValue()))
+            .andExpect(jsonPath("$.name", is(taskModel.getName())))
+            .andExpect(jsonPath("$.description", is(taskModel.getDescription())));
+    verify(service, times(1)).createTask(taskModel, id);
+    verifyNoMoreInteractions(service);
+  }
+
+  @Test
+  @DisplayName("Should call task deleting")
+  @WithMockUser
+  void deleteTaskTest() throws Exception {
+    int id = 1;
+    String taskName = "Task name";
+    doNothing().when(service).deleteTask(taskName, id);
+
+    mvc.perform(delete("/api/v1/todos" + "/%d/tasks".formatted(id))
+                    .queryParam("name", taskName)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$").doesNotExist());
+    verify(service, times(1)).deleteTask(taskName, id);
+    verifyNoMoreInteractions(service);
+  }
+
+  @Test
   @DisplayName("Should return 404")
   @WithMockUser
   void deleteTaskNotFoundTest() throws Exception {
@@ -265,7 +346,9 @@ class TodoControllerTest {
             .andExpect(jsonPath("$", notNullValue()))
             .andExpect(jsonPath("$.status", is(HttpStatus.NOT_FOUND.value())))
             .andExpect(jsonPath("$.error", is(HttpStatus.NOT_FOUND.getReasonPhrase())))
-            .andExpect(jsonPath("$.messages", notNullValue()));
+            .andExpect(jsonPath("$.messages", notNullValue()))
+            .andExpect(jsonPath("$.path", is("http://localhost/api/v1/todos/" + id + "/tasks")))
+            .andExpect(jsonPath("$.timestamp", notNullValue()));
   }
 
   public String toJsonString(final Object obj) throws RuntimeException {

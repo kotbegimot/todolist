@@ -6,6 +6,7 @@ import com.example.todolist.model.TaskModel;
 import com.example.todolist.model.TodoModel;
 import com.example.todolist.model.exceptions.NoSuchTaskFoundException;
 import com.example.todolist.model.exceptions.NoSuchTodoFoundException;
+import com.example.todolist.model.exceptions.TodoAlreadyExistsException;
 import com.example.todolist.repository.TaskRepositoryJPA;
 import com.example.todolist.repository.TodoRepositoryJPA;
 import com.example.todolist.util.TaskMapper;
@@ -35,6 +36,9 @@ public class TodosService {
   @Transactional
   public TodoModel createTodo(TodoModel newTodo) {
     validation.validateTodo(newTodo);
+    if (todoRepository.findByName(newTodo.getName()).isPresent()) {
+      throw new TodoAlreadyExistsException(newTodo.getName());
+    }
     newTodo.setId(0);
     return TodoMapper.toModel(todoRepository.save(TodoMapper.toEntity(newTodo)));
   }
