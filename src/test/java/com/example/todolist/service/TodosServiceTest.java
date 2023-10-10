@@ -102,10 +102,12 @@ class TodosServiceTest {
     todoEntityOutput.setId(1);
 
     doNothing().when(validation).validateTodo(todoModel);
+    when(todoRepository.findByName(todoEntity.getName())).thenReturn(Optional.empty());
     when(todoRepository.save(todoEntity)).thenReturn(todoEntityOutput);
 
     TodoModel outputModel = service.createTodo(todoModel);
 
+    verify(todoRepository, times(1)).findByName(todoEntity.getName());
     verify(todoRepository, times(1)).save(todoEntity);
     assertEquals(1, outputModel.getId());
     assertEquals(todoModel.getName(), outputModel.getName());
