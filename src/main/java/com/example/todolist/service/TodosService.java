@@ -81,7 +81,8 @@ public class TodosService {
       }
     }
     if (taskEntity != null) {
-      todoRepository.save(todoEntity);
+      //todoRepository.save(todoEntity);
+      taskRepository.deleteById(taskEntity.getId());
     } else {
       throw new NoSuchTaskFoundException(taskName);
     }
