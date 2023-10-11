@@ -7,7 +7,7 @@ import com.example.todolist.model.exceptions.NoSuchTodoFoundException;
 import com.example.todolist.model.exceptions.TodoAlreadyExistsException;
 import com.example.todolist.properties.MainProperties;
 import com.example.todolist.service.TodosService;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.todolist.util.ControllerUtil;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -156,7 +156,7 @@ class TodoControllerTest {
 
     mvc.perform(
             post("/api/v1/todos")
-                .content(toJsonString(newTodoModel))
+                .content(ControllerUtil.toJsonString(newTodoModel))
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON))
         .andDo(print())
@@ -179,15 +179,15 @@ class TodoControllerTest {
   void createTodoInvalidBodyTest() throws Exception {
     TodoModel newTodoModel = TodoModel.builder()
             .id(0)
-            .name(createStringWithLength(9))
-            .description(createStringWithLength(9))
+            .name(ControllerUtil.createStringWithLength(9))
+            .description(ControllerUtil.createStringWithLength(9))
             .tasks(new ArrayList<>())
             .build();
 
     when(properties.getExceptionDateFormat()).thenReturn("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
     mvc.perform(
                     post("/api/v1/todos")
-                            .content(toJsonString(newTodoModel))
+                            .content(ControllerUtil.toJsonString(newTodoModel))
                             .contentType(MediaType.APPLICATION_JSON)
                             .accept(MediaType.APPLICATION_JSON))
             .andDo(print())
@@ -220,7 +220,7 @@ class TodoControllerTest {
     when(properties.getExceptionDateFormat()).thenReturn("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
     mvc.perform(
                     post("/api/v1/todos")
-                            .content(toJsonString(newTodoModel))
+                            .content(ControllerUtil.toJsonString(newTodoModel))
                             .contentType(MediaType.APPLICATION_JSON)
                             .accept(MediaType.APPLICATION_JSON))
             .andDo(print())
@@ -253,7 +253,7 @@ class TodoControllerTest {
 
     mvc.perform(
             put("/api/v1/todos" + "/%d".formatted(id))
-                .content(toJsonString(updTodoModel))
+                .content(ControllerUtil.toJsonString(updTodoModel))
                 .contentType(MediaType.APPLICATION_JSON)
                 .accept(MediaType.APPLICATION_JSON))
         .andDo(print())
@@ -297,7 +297,7 @@ class TodoControllerTest {
     when(service.createTask(taskModel, id)).thenReturn(taskModel);
 
     mvc.perform(post("/api/v1/todos" + "/%d/tasks".formatted(id))
-                    .content(toJsonString(taskModel))
+                    .content(ControllerUtil.toJsonString(taskModel))
                     .contentType(MediaType.APPLICATION_JSON)
                     .accept(MediaType.APPLICATION_JSON))
             .andDo(print())
@@ -351,15 +351,26 @@ class TodoControllerTest {
             .andExpect(jsonPath("$.timestamp", notNullValue()));
   }
 
-  public String toJsonString(final Object obj) throws RuntimeException {
-    try {
-      return new ObjectMapper().writeValueAsString(obj);
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
-  }
+  @Test
+  @DisplayName("Should return 500")
+  @WithMockUser
+  void deleteTaskRunTimeErrorTest() throws Exception {
+    int id = 1;
+    String taskName = "Task name";
+    when(properties.getExceptionDateFormat()).thenReturn("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
+    doThrow(new RuntimeException("Accessing field on null object")).when(service).deleteTask(taskName, id);
 
-  public  String createStringWithLength(int length) {
-    return "a".repeat(Math.max(0, length));
+    mvc.perform(delete("/api/v1/todos" + "/%d/tasks".formatted(id))
+                    .queryParam("name", taskName)
+                    .accept(MediaType.APPLICATION_JSON))
+            .andDo(print())
+            .andExpect(status().isInternalServerError())
+            .andExpect(content().contentType("application/json"))
+            .andExpect(jsonPath("$", notNullValue()))
+            .andExpect(jsonPath("$.status", is(HttpStatus.INTERNAL_SERVER_ERROR.value())))
+            .andExpect(jsonPath("$.error", is(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())))
+            .andExpect(jsonPath("$.messages[0]", is("Accessing field on null object")))
+            .andExpect(jsonPath("$.path", is("http://localhost/api/v1/todos/" + id + "/tasks")))
+            .andExpect(jsonPath("$.timestamp", notNullValue()));
   }
 }
