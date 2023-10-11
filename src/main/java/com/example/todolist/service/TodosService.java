@@ -54,9 +54,8 @@ public class TodosService {
 
   @Transactional
   public void deleteTodo(int id) {
-    TodoEntity entity =
-        todoRepository.findById(id).orElseThrow(() -> new NoSuchTodoFoundException(id));
-    todoRepository.delete(entity);
+    todoRepository.findById(id).orElseThrow(() -> new NoSuchTodoFoundException(id));
+    todoRepository.deleteById(id);
   }
 
   @Transactional
