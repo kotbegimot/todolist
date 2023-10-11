@@ -6,6 +6,8 @@ spring:
     active: "dev"
   jpa:
     defer-datasource-initialization: true
+    show-sql: true
+    properties.hibernate.format_sql: true
   sql:
     init:
       mode: always
@@ -18,6 +20,8 @@ server:
 # OFF << FATAL << ERROR << WARN << INFO << DEBUG << TRACE << ALL
 logging:
   level.com.example.demo: "DEBUG"
+  level.org.hibernate.SQL: "DEBUG"
+  level.org.hibernate.type.descriptor.sql.BasicBinder: "TRACE"
 main:
   exceptionDateFormat: "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
   errorInvalidName: "Invalid %s name: string shouldn't be null or empty"
