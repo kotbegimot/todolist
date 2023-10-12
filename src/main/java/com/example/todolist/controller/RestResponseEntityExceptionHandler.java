@@ -29,44 +29,8 @@ public class RestResponseEntityExceptionHandler {
     @NonNull MainProperties properties;
 
     /**
-     * Custom exception, returns 404 if the todos doesn't exist.
-     */
-    @ExceptionHandler(NoSuchTodoFoundException.class)
-    public ResponseEntity<ErrorResponseModel> handleNoSuchTodoFoundException(
-            @NonNull NoSuchTodoFoundException exception, @NonNull HttpServletRequest request) {
-        String timeStamp = new SimpleDateFormat().format(new java.util.Date());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(
-                        ErrorResponseModel.builder()
-                                .status(HttpStatus.NOT_FOUND.value())
-                                .error(HttpStatus.NOT_FOUND.getReasonPhrase())
-                                .messages(List.of((exception.getMessage())))
-                                .path(request.getRequestURL().toString())
-                                .timestamp(timeStamp)
-                                .build());
-    }
-
-    /**
-     * Custom exception, returns 404 if the todos doesn't exist.
-     */
-    @ExceptionHandler(NoSuchTaskFoundException.class)
-    public ResponseEntity<ErrorResponseModel> handleNoSuchTaskFoundException(
-            @NonNull NoSuchTaskFoundException exception, @NonNull HttpServletRequest request) {
-        String timeStamp = new SimpleDateFormat().format(new java.util.Date());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(
-                        ErrorResponseModel.builder()
-                                .status(HttpStatus.NOT_FOUND.value())
-                                .error(HttpStatus.NOT_FOUND.getReasonPhrase())
-                                .messages(List.of((exception.getMessage())))
-                                .path(request.getRequestURL().toString())
-                                .timestamp(timeStamp)
-                                .build());
-    }
-
-    /**
-     * Custom exception is thrown by annotations, returns 400 if POST/PUT request body contains
-     * invalid values.
+     * 400 Custom exception is thrown by validation service, returns BAD_REQUEST status
+     * if POST/PUT request body contains invalid values.
      */
     @ExceptionHandler(InvalidRequestException.class)
     public ResponseEntity<ErrorResponseModel> handleInvalidRequestException(
@@ -85,8 +49,8 @@ public class RestResponseEntityExceptionHandler {
     }
 
     /**
-     * Custom exception is thrown by validation service, returns 400 if POST/PUT request body contains
-     * invalid values.
+     * 400 Custom exception is thrown by @Valid annotations, returns BAD_REQUEST status
+     * if POST/PUT request body contains invalid values.
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponseModel> handleValidationExceptions(
@@ -119,6 +83,10 @@ public class RestResponseEntityExceptionHandler {
                                 .build());
     }
 
+    /**
+     * 400 Custom exception is thrown by @Validated annotations, returns BAD_REQUEST status
+     * if POST/PUT request fields, variables or parameters contains invalid values.
+     */
     @ExceptionHandler(ConstraintViolationException.class)
     ResponseEntity<ErrorResponseModel> handleOnConstraintValidationException(
             @NonNull ConstraintViolationException ex, @NonNull HttpServletRequest request) {
@@ -149,7 +117,43 @@ public class RestResponseEntityExceptionHandler {
     }
 
     /**
-     * Custom exception, returns 409 if the created todos already exists.
+     * 404 Custom exception, returns NOT_FOUND status if the todos doesn't exist.
+     */
+    @ExceptionHandler(NoSuchTodoFoundException.class)
+    public ResponseEntity<ErrorResponseModel> handleNoSuchTodoFoundException(
+            @NonNull NoSuchTodoFoundException exception, @NonNull HttpServletRequest request) {
+        String timeStamp = new SimpleDateFormat().format(new java.util.Date());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(
+                        ErrorResponseModel.builder()
+                                .status(HttpStatus.NOT_FOUND.value())
+                                .error(HttpStatus.NOT_FOUND.getReasonPhrase())
+                                .messages(List.of((exception.getMessage())))
+                                .path(request.getRequestURL().toString())
+                                .timestamp(timeStamp)
+                                .build());
+    }
+
+    /**
+     * 404 Custom exception, returns NOT_FOUND status if the todos doesn't exist.
+     */
+    @ExceptionHandler(NoSuchTaskFoundException.class)
+    public ResponseEntity<ErrorResponseModel> handleNoSuchTaskFoundException(
+            @NonNull NoSuchTaskFoundException exception, @NonNull HttpServletRequest request) {
+        String timeStamp = new SimpleDateFormat().format(new java.util.Date());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(
+                        ErrorResponseModel.builder()
+                                .status(HttpStatus.NOT_FOUND.value())
+                                .error(HttpStatus.NOT_FOUND.getReasonPhrase())
+                                .messages(List.of((exception.getMessage())))
+                                .path(request.getRequestURL().toString())
+                                .timestamp(timeStamp)
+                                .build());
+    }
+
+    /**
+     * 409 Custom exception, returns CONFLICT status if the created todos already exists.
      */
     @ExceptionHandler(TodoAlreadyExistsException.class)
     public ResponseEntity<ErrorResponseModel> handleUserAlreadyExistsException(
@@ -168,7 +172,7 @@ public class RestResponseEntityExceptionHandler {
     }
 
     /**
-     * Custom exception, returns 500 if the unchecked exception is caught
+     * 500 Custom exception, returns INTERNAL_SERVER_ERROR status if the unchecked exception is caught
      */
     @ExceptionHandler(RuntimeException.class)
     public final @NonNull ResponseEntity<ErrorResponseModel> handleRuntimeExceptions(
