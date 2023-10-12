@@ -1,8 +1,10 @@
 package com.example.todolist.properties;
 
 import jakarta.validation.constraints.NotBlank;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.experimental.FieldDefaults;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.validation.annotation.Validated;
@@ -12,6 +14,7 @@ import org.springframework.validation.annotation.Validated;
 @Getter
 @Setter
 @Validated
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class MainProperties {
   @NotBlank(
       message =

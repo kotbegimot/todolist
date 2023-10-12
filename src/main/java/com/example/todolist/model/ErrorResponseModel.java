@@ -1,16 +1,19 @@
 package com.example.todolist.model;
 
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.FieldDefaults;
 
 import java.util.List;
 
 @Data
 @Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class ErrorResponseModel {
-    private Integer status;
-    private String error;
-    private List<String> messages;
-    private String path;
-    private String timestamp;
+    Integer status;
+    String error;
+    List<String> messages;
+    String path;
+    String timestamp;
 }

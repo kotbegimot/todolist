@@ -5,15 +5,19 @@ import com.example.todolist.model.exceptions.InvalidRequestException;
 import com.example.todolist.properties.MainProperties;
 import java.util.ArrayList;
 import java.util.List;
+
+import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class ValidationService {
-  @NonNull private final MainProperties properties;
-  private final List<String> errors = new ArrayList<>();
+  @NonNull MainProperties properties;
+  List<String> errors = new ArrayList<>();
 
   /**
    * Validates todomodel fields

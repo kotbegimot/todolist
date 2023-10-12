@@ -180,11 +180,12 @@ class TodosServiceTest {
   void deleteTodoSuccessTest() {
     int id = 1;
     when(todoRepository.findById(id)).thenReturn(Optional.of(todoEntity));
+    doNothing().when(todoRepository).deleteById(id);
 
     service.deleteTodo(id);
 
     verify(todoRepository, times(1)).findById(id);
-    verify(todoRepository, times(1)).delete(todoEntity);
+    verify(todoRepository, times(1)).deleteById(id);
     verifyNoMoreInteractions(todoRepository);
     verifyNoInteractions(taskRepository);
   }

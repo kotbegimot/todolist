@@ -1,7 +1,10 @@
 package com.example.todolist.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ControllerUtil {
     public static String toJsonString(final Object obj) throws RuntimeException {
         try {

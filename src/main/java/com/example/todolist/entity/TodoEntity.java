@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import lombok.experimental.FieldDefaults;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
 
@@ -15,27 +16,29 @@ import org.hibernate.annotations.CascadeType;
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @Table(name = "todos")
 public class TodoEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "todo_id")
-    private int id;
+    @EqualsAndHashCode.Exclude
+    int id;
 
     @Column(name = "name")
     @NotBlank(message = "Name must not be null or empty")
-    private String name;
+    String name;
 
     @Column(name = "description")
     @NotBlank(message = "Description must not be null or empty")
-    private String description;
+    String description;
 
     @OneToMany(mappedBy = "todoEntity",
             orphanRemoval = true,
             fetch = FetchType.EAGER)
     @Cascade(CascadeType.ALL)
     @Builder.Default
-    private List<TaskEntity> tasks = new ArrayList<>();
+    List<TaskEntity> tasks = new ArrayList<>();
 
     public void addTask(TaskEntity task) {
         if (tasks == null) {

@@ -10,8 +10,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import jakarta.validation.ConstraintViolationException;
+import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.ObjectUtils;
@@ -22,9 +24,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 @ControllerAdvice
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class RestResponseEntityExceptionHandler {
-    @NonNull
-    private final MainProperties properties;
+    @NonNull MainProperties properties;
 
     /**
      * Custom exception, returns 404 if the todos doesn't exist.

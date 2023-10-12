@@ -12,17 +12,21 @@ import com.example.todolist.repository.TodoRepositoryJPA;
 import com.example.todolist.util.TaskMapper;
 import com.example.todolist.util.TodoMapper;
 import java.util.List;
+
+import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class TodosService {
-  @NonNull private final TodoRepositoryJPA todoRepository;
-  @NonNull private final TaskRepositoryJPA taskRepository;
-  @NonNull private final ValidationService validation;
+  @NonNull TodoRepositoryJPA todoRepository;
+  @NonNull TaskRepositoryJPA taskRepository;
+  @NonNull ValidationService validation;
 
   public List<TodoModel> getTodos() {
     return TodoMapper.toModels(todoRepository.findAll());
